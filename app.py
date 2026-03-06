@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -760,5 +760,416 @@ def create_app():
         except Exception:
             pass
         return {'app_settings': app_settings, 'now': datetime.utcnow()}
+
+    # ─── SMART API ───────────────────────────────────────────────────────────
+
+    @app.route('/api/smart/diagnostics', methods=['POST'])
+    @login_required
+    def smart_diagnostics():
+        """AI-like diagnostic suggestions based on complaint keywords."""
+        complaint = request.json.get('complaint', '').lower()
+        suggestions = []
+
+        diagnosis_map = {
+            'fren': ['Fren balatası aşınması', 'Fren diski kontrolü', 'Fren hidroliği seviyesi', 'El freni ayarı'],
+            'brake': ['Fren balatası aşınması', 'Fren diski kontrolü', 'Fren hidroliği seviyesi'],
+            'motor': ['Motor yağı değişimi', 'Ateşleme sistemi kontrolü', 'Hava filtresi değişimi', 'Yakıt filtresi kontrolü'],
+            'engine': ['Motor yağı değişimi', 'Ateşleme sistemi kontrolü', 'Hava filtresi değişimi'],
+            'yağ': ['Motor yağı değişimi', 'Yağ kaçağı tespiti', 'Yağ filtresi değişimi'],
+            'titreşim': ['Balans ayarı', 'Amortisör kontrolü', 'Rot-balans', 'Tekerlek balansı'],
+            'ses': ['Egzoz sistemi kontrolü', 'Süspansiyon kontrolü', 'Rulman kontrolü', 'Kavrama diski'],
+            'çalışmıyor': ['Akü testi', 'Marş motoru kontrolü', 'Kontak sistemi', 'Yakıt pompası kontrolü'],
+            'aküsü': ['Akü şarj testi', 'Akü değişimi', 'Alternatör kontrolü'],
+            'klima': ['Klima gazı dolumu', 'Klima filtresi değişimi', 'Kompresör kontrolü'],
+            'lastik': ['Lastik değişimi', 'Lastik tamiri', 'Rot-balans ayarı'],
+            'ateşleme': ['Buji değişimi', 'Distribütör kontrolü', 'Ateşleme kabloları'],
+            'yakıt': ['Yakıt filtresi', 'Enjektör temizliği', 'Yakıt pompası', 'Karbüratör ayarı'],
+            'soğutma': ['Antifriz değişimi', 'Termostat kontrolü', 'Su pompası', 'Radyatör temizliği'],
+            'şanzıman': ['Şanzıman yağı kontrolü', 'Vites mekanizması', 'Kavrama ayarı'],
+            'elektrik': ['Elektrik tesisatı kontrolü', 'Sigorta paneli', 'Alternatör testi', 'Akü kontrolü'],
+            'far': ['Far ayarı', 'Ampul değişimi', 'Far camı temizliği'],
+            'direksiyon': ['Direksiyon pompası', 'Rot başı kontrolü', 'Balans ayarı'],
+            'egzoz': ['Egzoz muayenesi', 'Katalitik konvertör', 'Lambda sensörü'],
+            'debriyaj': ['Debriyaj balatası', 'Debriyaj silindiri', 'Kavrama ayarı'],
+        }
+
+        found = set()
+        for keyword, items in diagnosis_map.items():
+            if keyword in complaint:
+                for item in items:
+                    if item not in found:
+                        found.add(item)
+                        suggestions.append(item)
+
+        cost_estimates = {
+            'Fren balatası aşınması': (300, 800),
+            'Motor yağı değişimi': (200, 500),
+            'Balans ayarı': (150, 300),
+            'Akü testi': (50, 100),
+            'Klima gazı dolumu': (400, 800),
+            'Lastik değişimi': (500, 2000),
+            'Rot-balans': (200, 400),
+        }
+
+        result = []
+        for s in suggestions[:8]:
+            est = cost_estimates.get(s)
+            result.append({
+                'suggestion': s,
+                'min_cost': est[0] if est else None,
+                'max_cost': est[1] if est else None,
+            })
+
+        return jsonify({'suggestions': result, 'count': len(result)})
+
+    @app.route('/api/smart/alerts')
+    @login_required
+    def smart_alerts():
+        """Smart alerts: expiring insurance/inspections, overdue services."""
+        alerts = []
+        today = date.today()
+
+        vehicles = Vehicle.query.filter(Vehicle.insurance_expiry.isnot(None)).all()
+        for v in vehicles:
+            if v.insurance_expiry:
+                days = (v.insurance_expiry - today).days
+                if 0 <= days <= 30:
+                    alerts.append({
+                        'type': 'warning',
+                        'icon': 'shield-exclamation',
+                        'title': f'{v.plate} - Sigorta Süresi Dolmak Üzere',
+                        'message': f'{days} gün içinde sigorta bitiyor',
+                        'link': url_for('vehicle_detail', vid=v.id),
+                        'priority': 2 if days <= 7 else 1
+                    })
+                elif days < 0:
+                    alerts.append({
+                        'type': 'danger',
+                        'icon': 'shield-x',
+                        'title': f'{v.plate} - Sigorta Süresi Doldu!',
+                        'message': f'{abs(days)} gün önce sigorta bitti',
+                        'link': url_for('vehicle_detail', vid=v.id),
+                        'priority': 3
+                    })
+
+        for v in vehicles:
+            if v.inspection_expiry:
+                days = (v.inspection_expiry - today).days
+                if 0 <= days <= 30:
+                    alerts.append({
+                        'type': 'warning',
+                        'icon': 'clipboard-check',
+                        'title': f'{v.plate} - Muayene Süresi Dolmak Üzere',
+                        'message': f'{days} gün içinde muayene bitiyor',
+                        'link': url_for('vehicle_detail', vid=v.id),
+                        'priority': 2 if days <= 7 else 1
+                    })
+
+        overdue_threshold = datetime.utcnow() - timedelta(days=3)
+        overdue = ServiceRecord.query.filter(
+            ServiceRecord.status == 'waiting',
+            ServiceRecord.created_at < overdue_threshold
+        ).all()
+        for sr in overdue:
+            alerts.append({
+                'type': 'danger',
+                'icon': 'clock-history',
+                'title': f'{sr.record_no} - Gecikmiş Servis',
+                'message': f'{sr.vehicle.plate} aracı {(datetime.utcnow() - sr.created_at).days} gündür bekliyor',
+                'link': url_for('service_detail', rid=sr.id),
+                'priority': 3
+            })
+
+        completed_threshold = datetime.utcnow() - timedelta(days=1)
+        stuck = ServiceRecord.query.filter(
+            ServiceRecord.status == 'completed',
+            ServiceRecord.updated_at < completed_threshold
+        ).all()
+        for sr in stuck:
+            alerts.append({
+                'type': 'info',
+                'icon': 'check-circle',
+                'title': f'{sr.record_no} - Teslim Bekliyor',
+                'message': f'{sr.vehicle.plate} tamamlandı, teslim bekleniyor',
+                'link': url_for('service_detail', rid=sr.id),
+                'priority': 1
+            })
+
+        alerts.sort(key=lambda x: x['priority'], reverse=True)
+        return jsonify({'alerts': alerts[:20], 'count': len(alerts)})
+
+    @app.route('/api/smart/search')
+    @login_required
+    def smart_search():
+        """Global search across all entities."""
+        q = request.args.get('q', '').strip()
+        if len(q) < 2:
+            return jsonify({'results': []})
+
+        results = []
+        ql = f'%{q}%'
+
+        vehicles = Vehicle.query.filter(
+            db.or_(Vehicle.plate.ilike(ql), Vehicle.brand.ilike(ql), Vehicle.model.ilike(ql))
+        ).limit(5).all()
+        for v in vehicles:
+            results.append({
+                'type': 'vehicle',
+                'icon': 'car-front',
+                'title': v.plate,
+                'subtitle': f'{v.brand} {v.model} {v.year or ""}',
+                'link': url_for('vehicle_detail', vid=v.id)
+            })
+
+        customers = Customer.query.filter(
+            db.or_(Customer.full_name.ilike(ql), Customer.phone.ilike(ql))
+        ).limit(5).all()
+        for c in customers:
+            results.append({
+                'type': 'customer',
+                'icon': 'person',
+                'title': c.full_name,
+                'subtitle': c.phone or '',
+                'link': url_for('customer_edit', cid=c.id)
+            })
+
+        records = ServiceRecord.query.filter(
+            db.or_(ServiceRecord.record_no.ilike(ql), ServiceRecord.complaint.ilike(ql))
+        ).limit(5).all()
+        for r in records:
+            results.append({
+                'type': 'service',
+                'icon': 'tools',
+                'title': r.record_no,
+                'subtitle': f'{r.vehicle.plate} - {r.complaint[:50] if r.complaint else ""}',
+                'link': url_for('service_detail', rid=r.id)
+            })
+
+        return jsonify({'results': results})
+
+    @app.route('/api/smart/dashboard')
+    @login_required
+    def smart_dashboard_data():
+        """Real-time dashboard stats and chart data."""
+        today = date.today()
+
+        revenue_data = []
+        labels = []
+        for i in range(5, -1, -1):
+            month_start = today.replace(day=1) - timedelta(days=i*30)
+            month_end = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+            rev = db.session.query(func.sum(Invoice.final_amount)).filter(
+                Invoice.status == 'paid',
+                func.date(Invoice.paid_at) >= month_start,
+                func.date(Invoice.paid_at) < month_end
+            ).scalar() or 0
+            revenue_data.append(float(rev))
+            labels.append(month_start.strftime('%b %Y'))
+
+        status_counts = db.session.query(
+            ServiceRecord.status, func.count(ServiceRecord.id)
+        ).group_by(ServiceRecord.status).all()
+        status_data = {s: c for s, c in status_counts}
+
+        units = Unit.query.filter_by(is_active=True).all()
+        unit_data = []
+        for u in units:
+            count = ServiceRecord.query.filter_by(unit_id=u.id).count()
+            unit_rev = db.session.query(func.sum(Invoice.final_amount)).join(
+                ServiceRecord, Invoice.service_record_id == ServiceRecord.id
+            ).filter(
+                ServiceRecord.unit_id == u.id,
+                Invoice.status == 'paid'
+            ).scalar() or 0
+            unit_data.append({'name': u.name, 'count': count, 'revenue': float(unit_rev)})
+
+        today_services = ServiceRecord.query.filter(
+            func.date(ServiceRecord.created_at) == today
+        ).count()
+
+        completed = ServiceRecord.query.filter(
+            ServiceRecord.status.in_(['completed', 'delivered']),
+            ServiceRecord.actual_delivery.isnot(None)
+        ).all()
+        avg_time = 0
+        if completed:
+            total_hours = sum(
+                (sr.actual_delivery - sr.created_at).total_seconds() / 3600
+                for sr in completed if sr.actual_delivery
+            )
+            avg_time = round(total_hours / len(completed), 1)
+
+        total_vehicles = Vehicle.query.count()
+        total_customers = Customer.query.count()
+        total_invoices = Invoice.query.filter_by(status='paid').count()
+        total_revenue = db.session.query(func.sum(Invoice.final_amount)).filter(
+            Invoice.status == 'paid'
+        ).scalar() or 0
+
+        return jsonify({
+            'revenue_chart': {'labels': labels, 'data': revenue_data},
+            'status_chart': {
+                'waiting': status_data.get('waiting', 0),
+                'in_progress': status_data.get('in_progress', 0),
+                'completed': status_data.get('completed', 0),
+                'delivered': status_data.get('delivered', 0),
+            },
+            'unit_data': unit_data,
+            'today_services': today_services,
+            'avg_completion_hours': avg_time,
+            'total_vehicles': total_vehicles,
+            'total_customers': total_customers,
+            'total_invoices': total_invoices,
+            'total_revenue': float(total_revenue),
+        })
+
+    @app.route('/api/smart/suggestions')
+    @login_required
+    def smart_suggestions():
+        """Autocomplete for services and parts catalog."""
+        q = request.args.get('q', '').lower()
+        catalog = [
+            {'name': 'Yağ Değişimi', 'type': 'service', 'price': 350},
+            {'name': 'Yağ Filtresi', 'type': 'part', 'price': 120},
+            {'name': 'Hava Filtresi', 'type': 'part', 'price': 150},
+            {'name': 'Polen Filtresi', 'type': 'part', 'price': 200},
+            {'name': 'Yakıt Filtresi', 'type': 'part', 'price': 180},
+            {'name': 'Fren Balatası (Ön)', 'type': 'part', 'price': 450},
+            {'name': 'Fren Balatası (Arka)', 'type': 'part', 'price': 380},
+            {'name': 'Fren Diski', 'type': 'part', 'price': 600},
+            {'name': 'Rot Balans', 'type': 'service', 'price': 250},
+            {'name': 'Lastik Değişimi (4 Adet)', 'type': 'service', 'price': 200},
+            {'name': 'Muayene Hazırlık', 'type': 'service', 'price': 300},
+            {'name': 'Aks Körüğü', 'type': 'part', 'price': 280},
+            {'name': 'Amortisör (Ön)', 'type': 'part', 'price': 800},
+            {'name': 'Amortisör (Arka)', 'type': 'part', 'price': 700},
+            {'name': 'Triger Seti', 'type': 'part', 'price': 1200},
+            {'name': 'Klima Gazı Dolumu', 'type': 'service', 'price': 600},
+            {'name': 'Akü Değişimi', 'type': 'part', 'price': 900},
+            {'name': 'Buji Takımı', 'type': 'part', 'price': 400},
+            {'name': 'Distribütör Kapağı', 'type': 'part', 'price': 200},
+            {'name': 'Termostat', 'type': 'part', 'price': 250},
+            {'name': 'Su Pompası', 'type': 'part', 'price': 450},
+            {'name': 'Radyatör Temizliği', 'type': 'service', 'price': 200},
+            {'name': 'Antifriz Değişimi', 'type': 'service', 'price': 150},
+            {'name': 'Şanzıman Yağı', 'type': 'service', 'price': 300},
+            {'name': 'Diferansiyel Yağı', 'type': 'service', 'price': 250},
+            {'name': 'Egzoz Kontrolü', 'type': 'service', 'price': 100},
+            {'name': 'Far Ayarı', 'type': 'service', 'price': 100},
+            {'name': 'Direksiyon Kutusu', 'type': 'part', 'price': 1500},
+            {'name': 'Debriyaj Seti', 'type': 'part', 'price': 1800},
+            {'name': 'Elektrik Tesisatı Kontrolü', 'type': 'service', 'price': 200},
+            {'name': 'Motor Temizliği', 'type': 'service', 'price': 300},
+            {'name': 'Klima Filtresi', 'type': 'part', 'price': 200},
+            {'name': 'Silecek Takımı', 'type': 'part', 'price': 180},
+            {'name': 'Kablosuz Kilitleme Tamiri', 'type': 'service', 'price': 150},
+            {'name': 'OBD Diagnostik Tarama', 'type': 'service', 'price': 200},
+            {'name': 'İşçilik Ücreti', 'type': 'service', 'price': 100},
+        ]
+
+        if q:
+            filtered = [item for item in catalog if q in item['name'].lower()]
+        else:
+            filtered = catalog
+
+        return jsonify({'items': filtered[:15]})
+
+    @app.route('/api/smart/kanban')
+    @login_required
+    def smart_kanban():
+        """Service kanban board data."""
+        records = ServiceRecord.query.filter(
+            ServiceRecord.status != 'delivered'
+        ).order_by(ServiceRecord.created_at.desc()).limit(50).all()
+
+        result = {
+            'waiting': [],
+            'in_progress': [],
+            'completed': [],
+        }
+
+        for r in records:
+            item = {
+                'id': r.id,
+                'record_no': r.record_no,
+                'plate': r.vehicle.plate,
+                'vehicle': f'{r.vehicle.brand} {r.vehicle.model}',
+                'complaint': (r.complaint or '')[:80],
+                'unit': r.unit.name if r.unit else None,
+                'accepted_by': r.acceptor.full_name if r.acceptor else None,
+                'created_at': r.created_at.strftime('%d.%m %H:%M'),
+                'hours_ago': round((datetime.utcnow() - r.created_at).total_seconds() / 3600, 1),
+                'link': url_for('service_detail', rid=r.id),
+            }
+            if r.status in result:
+                result[r.status].append(item)
+
+        return jsonify(result)
+
+    @app.route('/api/vehicles/<int:vid>/health')
+    @login_required
+    def vehicle_health(vid):
+        """Smart vehicle health score based on service history."""
+        v = db.session.get(Vehicle, vid)
+        if not v:
+            abort(404)
+
+        score = 100
+        warnings = []
+        today = date.today()
+
+        if v.insurance_expiry:
+            days = (v.insurance_expiry - today).days
+            if days < 0:
+                score -= 20
+                warnings.append({'level': 'danger', 'msg': f'Sigorta {abs(days)} gün önce bitti!'})
+            elif days < 30:
+                score -= 10
+                warnings.append({'level': 'warning', 'msg': f'Sigorta {days} gün sonra bitiyor'})
+        else:
+            score -= 10
+            warnings.append({'level': 'info', 'msg': 'Sigorta tarihi girilmemiş'})
+
+        if v.inspection_expiry:
+            days = (v.inspection_expiry - today).days
+            if days < 0:
+                score -= 20
+                warnings.append({'level': 'danger', 'msg': f'Muayene {abs(days)} gün önce bitti!'})
+            elif days < 30:
+                score -= 10
+                warnings.append({'level': 'warning', 'msg': f'Muayene {days} gün sonra bitiyor'})
+        else:
+            score -= 10
+            warnings.append({'level': 'info', 'msg': 'Muayene tarihi girilmemiş'})
+
+        total_services = len(v.service_records)
+        if total_services == 0:
+            warnings.append({'level': 'info', 'msg': 'Henüz servis kaydı yok'})
+        else:
+            last_service = max(v.service_records, key=lambda x: x.created_at)
+            days_since = (datetime.utcnow() - last_service.created_at).days
+            if days_since > 365:
+                score -= 15
+                warnings.append({'level': 'warning', 'msg': f'Son servis {days_since} gün önce'})
+
+        score = max(0, min(100, score))
+
+        if score >= 80:
+            health_label = 'İyi'
+            health_color = 'success'
+        elif score >= 60:
+            health_label = 'Orta'
+            health_color = 'warning'
+        else:
+            health_label = 'Kritik'
+            health_color = 'danger'
+
+        return jsonify({
+            'score': score,
+            'label': health_label,
+            'color': health_color,
+            'warnings': warnings,
+            'total_services': total_services,
+        })
 
     return app

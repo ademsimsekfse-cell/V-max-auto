@@ -1,117 +1,237 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - V-MAX OTOMOTİV{% endblock %}
+{% block title %}Dashboard — V-MAX OTOMOTİV{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0 fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
-  <span class="text-muted small">{{ now.strftime('%d.%m.%Y %H:%M') }}</span>
+<div class="d-flex justify-content-between align-items-center mb-4 animate-fade-up">
+  <div>
+    <h4 class="mb-0 fw-bold"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h4>
+    <div class="text-muted small mt-1">Hoş geldiniz, <strong>{{ current_user.full_name }}</strong> — {{ current_user.role_display }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('service_new') }}" class="btn btn-primary btn-sm shadow-sm">
+      <i class="bi bi-plus-circle me-1"></i>Yeni Servis
+    </a>
+  </div>
 </div>
 
-<!-- Stats Cards -->
+<!-- Smart KPI Cards -->
 <div class="row g-3 mb-4">
-  <div class="col-xl-3 col-md-6">
-    <div class="card stat-card border-0">
-      <div class="card-body d-flex align-items-center">
-        <div class="stat-icon text-primary me-3"><i class="bi bi-tools"></i></div>
-        <div>
-          <div class="text-muted small">Aktif Servis</div>
-          <div class="fs-2 fw-bold text-primary">{{ active_services }}</div>
+  <div class="col-xl-3 col-md-6 animate-fade-up-1">
+    <div class="smart-stat-card" style="--card-accent:linear-gradient(90deg,#0d6efd,#4a90d9);--card-gradient:linear-gradient(135deg,#0d6efd,#4a90d9)">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="stat-icon-bg" style="background:rgba(13,110,253,0.1)">
+          <i class="bi bi-tools text-primary"></i>
         </div>
+        <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:0.7rem">AKTİF</span>
       </div>
+      <div class="stat-number" data-countup="{{ active_services }}">{{ active_services }}</div>
+      <div class="stat-label">Aktif Servis</div>
+      <div class="stat-trend text-muted"><i class="bi bi-arrow-up-right text-success"></i> Canlı takip</div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card stat-card border-0">
-      <div class="card-body d-flex align-items-center">
-        <div class="stat-icon text-warning me-3"><i class="bi bi-hourglass-split"></i></div>
-        <div>
-          <div class="text-muted small">Bekleyen</div>
-          <div class="fs-2 fw-bold text-warning">{{ waiting }}</div>
+  <div class="col-xl-3 col-md-6 animate-fade-up-2">
+    <div class="smart-stat-card" style="--card-accent:linear-gradient(90deg,#ffc107,#fd7e14);--card-gradient:linear-gradient(135deg,#ffc107,#fd7e14)">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="stat-icon-bg" style="background:rgba(255,193,7,0.1)">
+          <i class="bi bi-hourglass-split" style="color:#ffc107"></i>
         </div>
+        <span class="badge" style="background:rgba(255,193,7,0.15);color:#e67e22;font-size:0.7rem">BEKLİYOR</span>
       </div>
+      <div class="stat-number" data-countup="{{ waiting }}" style="background:linear-gradient(135deg,#ffc107,#fd7e14)">{{ waiting }}</div>
+      <div class="stat-label">Bekleyen Araç</div>
+      <div class="stat-trend text-muted"><i class="bi bi-clock text-warning"></i> Öncelikli</div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card stat-card border-0">
-      <div class="card-body d-flex align-items-center">
-        <div class="stat-icon text-success me-3"><i class="bi bi-check-circle"></i></div>
-        <div>
-          <div class="text-muted small">Tamamlanan</div>
-          <div class="fs-2 fw-bold text-success">{{ completed }}</div>
+  <div class="col-xl-3 col-md-6 animate-fade-up-3">
+    <div class="smart-stat-card" style="--card-accent:linear-gradient(90deg,#198754,#20c997);--card-gradient:linear-gradient(135deg,#198754,#20c997)">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="stat-icon-bg" style="background:rgba(25,135,84,0.1)">
+          <i class="bi bi-check-circle text-success"></i>
         </div>
+        <span class="badge bg-success bg-opacity-10 text-success" style="font-size:0.7rem">TAMAMLANDI</span>
       </div>
+      <div class="stat-number" data-countup="{{ completed }}" style="background:linear-gradient(135deg,#198754,#20c997)">{{ completed }}</div>
+      <div class="stat-label">Tamamlanan</div>
+      <div class="stat-trend text-muted"><i class="bi bi-trophy text-success"></i> Başarıyla bitti</div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card stat-card border-0">
-      <div class="card-body d-flex align-items-center">
-        <div class="stat-icon text-info me-3"><i class="bi bi-cash-coin"></i></div>
-        <div>
-          <div class="text-muted small">Bugünkü Gelir</div>
-          <div class="fs-2 fw-bold text-info">₺{{ "%.2f"|format(today_revenue) }}</div>
+  <div class="col-xl-3 col-md-6 animate-fade-up-4">
+    <div class="smart-stat-card" style="--card-accent:linear-gradient(90deg,#0dcaf0,#6f42c1);--card-gradient:linear-gradient(135deg,#0dcaf0,#6f42c1)">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="stat-icon-bg" style="background:rgba(13,202,240,0.1)">
+          <i class="bi bi-cash-coin" style="color:#0dcaf0"></i>
         </div>
+        <span class="badge" style="background:rgba(13,202,240,0.15);color:#0dcaf0;font-size:0.7rem">BUGÜN</span>
+      </div>
+      <div class="stat-number" style="background:linear-gradient(135deg,#0dcaf0,#6f42c1)">
+        ₺<span id="today-rev-stat" data-countup="{{ today_revenue|int }}" data-decimals="0">{{ "%.0f"|format(today_revenue) }}</span>
+      </div>
+      <div class="stat-label">Bugünkü Gelir</div>
+      <div class="stat-trend text-muted"><i class="bi bi-graph-up text-info"></i> Gerçek zamanlı</div>
+    </div>
+  </div>
+</div>
+
+<!-- Extra Smart Stats Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3 animate-fade-up-1">
+    <div class="chart-card p-3 text-center">
+      <div class="text-muted small mb-1"><i class="bi bi-car-front me-1"></i>Toplam Araç</div>
+      <div class="fw-bold fs-4" id="total-vehicles-stat" data-countup="0">–</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 animate-fade-up-2">
+    <div class="chart-card p-3 text-center">
+      <div class="text-muted small mb-1"><i class="bi bi-people me-1"></i>Toplam Müşteri</div>
+      <div class="fw-bold fs-4" id="total-customers-stat" data-countup="0">–</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 animate-fade-up-3">
+    <div class="chart-card p-3 text-center">
+      <div class="text-muted small mb-1"><i class="bi bi-currency-exchange me-1"></i>Toplam Gelir</div>
+      <div class="fw-bold fs-4" id="total-revenue-stat" data-countup="0" data-prefix="₺" data-decimals="0">–</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 animate-fade-up-4">
+    <div class="chart-card p-3 text-center">
+      <div class="text-muted small mb-1"><i class="bi bi-stopwatch me-1"></i>Ort. Tamamlanma</div>
+      <div class="fw-bold fs-4"><span id="avg-time-stat" data-countup="0" data-decimals="1">–</span><small class="text-muted ms-1" style="font-size:0.75rem">saat</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-8 animate-fade-up-1">
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Gelir Trendi (Son 6 Ay)</span>
+      </div>
+      <div class="chart-body" style="height:220px"><canvas id="revenueChart"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-4 animate-fade-up-2">
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="fw-bold"><i class="bi bi-pie-chart me-2 text-warning"></i>Servis Dağılımı</span>
+      </div>
+      <div class="chart-body" style="height:220px"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Unit Performance Chart -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6 animate-fade-up-1">
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="fw-bold"><i class="bi bi-bar-chart me-2 text-success"></i>Birim Performansı</span>
+      </div>
+      <div class="chart-body" style="height:200px"><canvas id="unitChart"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6 animate-fade-up-2">
+    <div class="alerts-panel">
+      <div class="chart-header">
+        <span class="fw-bold"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Akıllı Uyarılar</span>
+        <span class="badge bg-danger bg-opacity-10 text-danger" style="font-size:0.7rem" id="alert-count-badge"></span>
+      </div>
+      <div id="alerts-panel-body" style="max-height:200px;overflow-y:auto">
+        <div class="p-3 text-center text-muted small"><div class="spinner-border spinner-border-sm me-2"></div>Yükleniyor...</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Recent Service Records -->
-<div class="card border-0 shadow-sm">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Son Servis Kayıtları</h6>
+<!-- Kanban Board -->
+<div class="mb-4 animate-fade-up">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="fw-bold mb-0"><i class="bi bi-kanban me-2 text-primary"></i>Servis Takip Panosu</h6>
+    <button class="btn btn-sm btn-outline-primary" onclick="VMaxSmart.loadKanban()">
+      <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+    </button>
+  </div>
+  <div class="kanban-board" id="kanban-board">
+    <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Kanban yükleniyor...</div>
+  </div>
+</div>
+
+<!-- Recent Records Table -->
+<div class="chart-card animate-fade-up">
+  <div class="chart-header">
+    <span class="fw-bold"><i class="bi bi-clock-history me-2"></i>Son Servis Kayıtları</span>
     <a href="{{ url_for('service_list') }}" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
   </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Kayıt No</th>
-            <th>Plaka</th>
-            <th>Araç</th>
-            <th>Durum</th>
-            <th>Birim</th>
-            <th>Tarih</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for rec in recent_records %}
-          <tr>
-            <td><span class="badge bg-secondary">{{ rec.record_no }}</span></td>
-            <td><strong>{{ rec.vehicle.plate }}</strong></td>
-            <td>{{ rec.vehicle.brand }} {{ rec.vehicle.model }}</td>
-            <td>
-              {% if rec.status == 'waiting' %}<span class="badge status-waiting">Bekliyor</span>
-              {% elif rec.status == 'in_progress' %}<span class="badge status-in_progress">İşlemde</span>
-              {% elif rec.status == 'completed' %}<span class="badge status-completed">Tamamlandı</span>
-              {% else %}<span class="badge status-delivered">Teslim Edildi</span>{% endif %}
-            </td>
-            <td>{{ rec.unit.name if rec.unit else '-' }}</td>
-            <td class="text-muted small">{{ rec.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-            <td><a href="{{ url_for('service_detail', rid=rec.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
-          </tr>
-          {% else %}
-          <tr><td colspan="7" class="text-center text-muted py-4">Henüz servis kaydı yok.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Kayıt No</th><th>Plaka</th><th>Araç</th><th>Durum</th><th>Birim</th><th>Tarih</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in recent_records %}
+        <tr>
+          <td><span class="badge bg-secondary">{{ rec.record_no }}</span></td>
+          <td><strong>{{ rec.vehicle.plate }}</strong></td>
+          <td>{{ rec.vehicle.brand }} {{ rec.vehicle.model }}</td>
+          <td>
+            {% if rec.status == 'waiting' %}<span class="badge status-waiting">Bekliyor</span>
+            {% elif rec.status == 'in_progress' %}<span class="badge status-in_progress">İşlemde</span>
+            {% elif rec.status == 'completed' %}<span class="badge status-completed">Tamamlandı</span>
+            {% else %}<span class="badge status-delivered">Teslim</span>{% endif %}
+          </td>
+          <td>{{ rec.unit.name if rec.unit else '–' }}</td>
+          <td class="text-muted small">{{ rec.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+          <td><a href="{{ url_for('service_detail', rid=rec.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Henüz servis kaydı yok.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
 <!-- Floating Action Button -->
 <div class="fab-container">
-  <div class="fab-options">
-    <a href="{{ url_for('service_new') }}" class="fab-option">
-      <i class="bi bi-tools"></i><span>Yeni Servis Kaydı</span>
-    </a>
-    <a href="{{ url_for('vehicle_new') }}" class="fab-option">
-      <i class="bi bi-car-front"></i><span>Yeni Araç</span>
-    </a>
-    <a href="{{ url_for('customer_new') }}" class="fab-option">
-      <i class="bi bi-person-plus"></i><span>Yeni Müşteri</span>
-    </a>
+  <div class="fab-options" id="fab-options">
+    <a href="{{ url_for('service_new') }}" class="fab-option"><i class="bi bi-tools"></i><span>Yeni Servis Kaydı</span></a>
+    <a href="{{ url_for('vehicle_new') }}" class="fab-option"><i class="bi bi-car-front"></i><span>Yeni Araç</span></a>
+    <a href="{{ url_for('customer_new') }}" class="fab-option"><i class="bi bi-person-plus"></i><span>Yeni Müşteri</span></a>
   </div>
-  <button class="fab-main" title="Yeni kayıt oluştur">+</button>
+  <button class="fab-main" id="fab-btn" title="Hızlı Eylem">+</button>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mirror alerts into dashboard panel too
+const origLoad = VMaxSmart.loadAlerts.bind(VMaxSmart);
+VMaxSmart.loadAlerts = async function() {
+  await origLoad();
+  // Also fill alerts-panel-body
+  try {
+    const res = await fetch('/api/smart/alerts');
+    const data = await res.json();
+    const panel = document.getElementById('alerts-panel-body');
+    const badge = document.getElementById('alert-count-badge');
+    if (badge && data.count > 0) badge.textContent = data.count + ' uyarı';
+    if (panel) {
+      const typeIcon = { warning: 'exclamation-triangle-fill', danger: 'x-circle-fill', info: 'info-circle-fill' };
+      if (data.alerts.length > 0) {
+        panel.innerHTML = data.alerts.slice(0, 6).map(a => `
+          <a href="${a.link}" class="alert-item ${a.type}">
+            <div class="alert-item-icon"><i class="bi bi-${typeIcon[a.type]||'bell-fill'}"></i></div>
+            <div>
+              <div style="font-size:0.82rem;font-weight:600">${a.title}</div>
+              <div style="font-size:0.75rem;opacity:0.7">${a.message}</div>
+            </div>
+          </a>`).join('');
+      } else {
+        panel.innerHTML = '<div class="p-4 text-center text-muted"><i class="bi bi-check-circle-fill text-success me-2"></i>Her şey yolunda!</div>';
+      }
+    }
+  } catch(e) {}
+};
+</script>
 {% endblock %}
