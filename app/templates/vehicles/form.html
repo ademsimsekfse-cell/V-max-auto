@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if vehicle %}Araç Düzenle{% else %}Yeni Araç{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if vehicle %}✏️ Araç Düzenle{% else %}➕ Yeni Araç{% endif %}</h1>
+  <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn btn-secondary">← Geri</a>
+</div>
+<form method="post" class="form-card">
+  <label>Müşteri *</label>
+  <select name="customer_id" required>
+    {% for c in customers %}
+    <option value="{{ c.id }}" {% if vehicle and vehicle.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Plaka *</label>
+  <input type="text" name="plate" value="{{ vehicle.plate if vehicle else '' }}" required placeholder="34 ABC 001" style="text-transform:uppercase" />
+
+  <label>Marka *</label>
+  <input type="text" name="brand" value="{{ vehicle.brand if vehicle else '' }}" required />
+
+  <label>Model *</label>
+  <input type="text" name="model" value="{{ vehicle.model if vehicle else '' }}" required />
+
+  <label>Yıl</label>
+  <input type="number" name="year" value="{{ vehicle.year if vehicle else '' }}" min="1900" max="2099" />
+
+  <label>Kilometre</label>
+  <input type="number" name="mileage" value="{{ vehicle.mileage if vehicle else '' }}" min="0" />
+
+  <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+</form>
+{% endblock %}

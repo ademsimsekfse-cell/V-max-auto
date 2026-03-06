@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}V-max Auto Servis{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <!-- ── Sticky Navbar ──────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="{{ url_for('main.index') }}">
+        <span class="brand-icon">🔧</span>
+        V-max Auto
+      </a>
+    </div>
+
+    <button class="nav-toggle" aria-label="Menüyü aç/kapat" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav-links">
+      <li><a href="{{ url_for('main.index') }}">📊 Dashboard</a></li>
+      <li><a href="{{ url_for('customers.list_customers') }}">👥 Müşteriler</a></li>
+      <li><a href="{{ url_for('vehicles.list_vehicles') }}">🚗 Araçlar</a></li>
+      <li><a href="{{ url_for('service_orders.list_orders') }}">🛠️ Servis</a></li>
+      <li><a href="{{ url_for('invoices.list_invoices') }}">🧾 Faturalar</a></li>
+      <li><a href="{{ url_for('expenses.list_expenses') }}">💸 Giderler</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Page wrapper (transition target) ──────────────── -->
+  <div class="page-wrapper">
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <p>© 2025 V-max Oto Servis Otomasyon &nbsp;·&nbsp; Tüm hakları saklıdır.</p>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
