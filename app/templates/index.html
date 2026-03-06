@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – V-max Auto{% endblock %}
+{% block content %}
+<h1>📊 Dashboard</h1>
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <h2>{{ total_customers }}</h2>
+    <p>👥 Toplam Müşteri</p>
+  </div>
+  <div class="stat-card green">
+    <h2>{{ total_vehicles }}</h2>
+    <p>🚗 Toplam Araç</p>
+  </div>
+  <div class="stat-card orange">
+    <h2>{{ open_orders }}</h2>
+    <p>🛠️ Açık Servis Emri</p>
+  </div>
+  <div class="stat-card red">
+    <h2>{{ pending_invoices }}</h2>
+    <p>🧾 Bekleyen Fatura</p>
+  </div>
+</div>
+
+<div class="stats-grid" style="margin-top:1rem">
+  <div class="stat-card green">
+    <h2>{{ "%.2f"|format(total_income) }} ₺</h2>
+    <p>💰 Toplam Gelir</p>
+  </div>
+  <div class="stat-card red">
+    <h2>{{ "%.2f"|format(total_expenses) }} ₺</h2>
+    <p>💸 Toplam Gider</p>
+  </div>
+  <div class="stat-card {% if net_profit >= 0 %}blue{% else %}red{% endif %}">
+    <h2>{{ "%.2f"|format(net_profit) }} ₺</h2>
+    <p>📈 Net Kâr / Zarar</p>
+  </div>
+</div>
+
+<div class="quick-links">
+  <h2>Hızlı Erişim</h2>
+  <a href="{{ url_for('customers.create_customer') }}" class="btn btn-primary">+ Müşteri Ekle</a>
+  <a href="{{ url_for('vehicles.create_vehicle') }}" class="btn btn-primary">+ Araç Ekle</a>
+  <a href="{{ url_for('service_orders.create_order') }}" class="btn btn-primary">+ Servis Emri</a>
+  <a href="{{ url_for('invoices.create_invoice') }}" class="btn btn-primary">+ Fatura Oluştur</a>
+  <a href="{{ url_for('expenses.create_expense') }}" class="btn btn-primary">+ Gider Ekle</a>
+</div>
+{% endblock %}
