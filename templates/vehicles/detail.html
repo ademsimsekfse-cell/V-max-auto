@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ vehicle.plate }} - Araç Detayı{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-car-front me-2"></i>{{ vehicle.plate }}</h4>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('vehicle_edit', vid=vehicle.id) }}" class="btn btn-outline-primary">
+      <i class="bi bi-pencil me-1"></i>Düzenle
+    </a>
+    <a href="{{ url_for('service_new') }}" class="btn btn-success">
+      <i class="bi bi-tools me-1"></i>Yeni Servis
+    </a>
+    <a href="{{ url_for('vehicles') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Geri
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-car-front-fill me-2"></i>Araç Bilgileri</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted">Plaka</td><td><strong>{{ vehicle.plate }}</strong></td></tr>
+          <tr><td class="text-muted">Marka</td><td>{{ vehicle.brand or '-' }}</td></tr>
+          <tr><td class="text-muted">Model</td><td>{{ vehicle.model or '-' }}</td></tr>
+          <tr><td class="text-muted">Yıl</td><td>{{ vehicle.year or '-' }}</td></tr>
+          <tr><td class="text-muted">Renk</td><td>{{ vehicle.color or '-' }}</td></tr>
+          <tr><td class="text-muted">Motor No</td><td>{{ vehicle.engine_no or '-' }}</td></tr>
+          <tr><td class="text-muted">Şasi No</td><td>{{ vehicle.chassis_no or '-' }}</td></tr>
+          <tr>
+            <td class="text-muted">Sigorta Bitiş</td>
+            <td>
+              {% if vehicle.insurance_expiry %}
+                <span class="{% if vehicle.insurance_expiry < now.date() %}text-danger fw-bold{% elif (vehicle.insurance_expiry - now.date()).days < 30 %}text-warning{% endif %}">
+                  {{ vehicle.insurance_expiry.strftime('%d.%m.%Y') }}
+                  {% if vehicle.insurance_expiry < now.date() %} <i class="bi bi-exclamation-triangle-fill"></i>{% endif %}
+                </span>
+              {% else %}-{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="text-muted">Muayene Bitiş</td>
+            <td>
+              {% if vehicle.inspection_expiry %}
+                <span class="{% if vehicle.inspection_expiry < now.date() %}text-danger fw-bold{% elif (vehicle.inspection_expiry - now.date()).days < 30 %}text-warning{% endif %}">
+                  {{ vehicle.inspection_expiry.strftime('%d.%m.%Y') }}
+                  {% if vehicle.inspection_expiry < now.date() %} <i class="bi bi-exclamation-triangle-fill"></i>{% endif %}
+                </span>
+              {% else %}-{% endif %}
+            </td>
+          </tr>
+        </table>
+        {% if vehicle.notes %}
+        <div class="mt-2 p-2 bg-light rounded"><small class="text-muted">{{ vehicle.notes }}</small></div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if vehicle.owner %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-person-fill me-2"></i>Sahip Bilgileri</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted">Ad Soyad</td><td><strong>{{ vehicle.owner.full_name }}</strong></td></tr>
+          <tr><td class="text-muted">Telefon</td><td>{{ vehicle.owner.phone or '-' }}</td></tr>
+          <tr><td class="text-muted">E-posta</td><td>{{ vehicle.owner.email or '-' }}</td></tr>
+          <tr><td class="text-muted">Adres</td><td>{{ vehicle.owner.address or '-' }}</td></tr>
+        </table>
+        <a href="{{ url_for('customer_edit', cid=vehicle.owner.id) }}" class="btn btn-sm btn-outline-secondary mt-2">
+          <i class="bi bi-pencil me-1"></i>Müşteriyi Düzenle
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-clock-history me-2"></i>Servis Geçmişi</span>
+        <a href="{{ url_for('service_new') }}" class="btn btn-sm btn-success">
+          <i class="bi bi-plus-lg me-1"></i>Yeni Servis
+        </a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Kayıt No</th>
+                <th>Durum</th>
+                <th>Şikayet</th>
+                <th>Tarih</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rec in records %}
+              <tr>
+                <td><span class="badge bg-secondary">{{ rec.record_no }}</span></td>
+                <td>
+                  {% if rec.status == 'waiting' %}<span class="badge status-waiting">Bekliyor</span>
+                  {% elif rec.status == 'in_progress' %}<span class="badge status-in_progress">İşlemde</span>
+                  {% elif rec.status == 'completed' %}<span class="badge status-completed">Tamamlandı</span>
+                  {% else %}<span class="badge status-delivered">Teslim Edildi</span>{% endif %}
+                </td>
+                <td class="text-truncate" style="max-width:150px">{{ rec.complaint or '-' }}</td>
+                <td class="text-muted small">{{ rec.created_at.strftime('%d.%m.%Y') }}</td>
+                <td><a href="{{ url_for('service_detail', rid=rec.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="text-center text-muted py-4">Servis kaydı yok.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

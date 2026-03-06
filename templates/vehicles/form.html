@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{% if vehicle %}Araç Düzenle{% else %}Yeni Araç{% endif %} - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold">
+    <i class="bi bi-car-front me-2"></i>{% if vehicle %}Araç Düzenle{% else %}Yeni Araç Ekle{% endif %}
+  </h4>
+  <a href="{{ url_for('vehicles') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Geri
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <form method="POST">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Plaka *</label>
+          <input type="text" name="plate" class="form-control text-uppercase"
+                 value="{{ vehicle.plate if vehicle else '' }}" required
+                 placeholder="34ABC123" style="text-transform:uppercase">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Marka</label>
+          <input type="text" name="brand" class="form-control"
+                 value="{{ vehicle.brand if vehicle else '' }}" placeholder="Toyota, Ford, BMW...">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Model</label>
+          <input type="text" name="model" class="form-control"
+                 value="{{ vehicle.model if vehicle else '' }}" placeholder="Corolla, Focus...">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Yıl</label>
+          <input type="number" name="year" class="form-control"
+                 value="{{ vehicle.year if vehicle else '' }}" min="1900" max="2099" placeholder="2020">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Renk</label>
+          <input type="text" name="color" class="form-control"
+                 value="{{ vehicle.color if vehicle else '' }}" placeholder="Beyaz, Siyah...">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Motor No</label>
+          <input type="text" name="engine_no" class="form-control"
+                 value="{{ vehicle.engine_no if vehicle else '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Şasi No</label>
+          <input type="text" name="chassis_no" class="form-control"
+                 value="{{ vehicle.chassis_no if vehicle else '' }}">
+        </div>
+
+        <div class="col-12"><hr class="my-1"><h6 class="text-muted">Sahip Bilgileri</h6></div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Mevcut Müşteri Seç</label>
+          <select name="owner_id" class="form-select">
+            <option value="">-- Yeni müşteri oluştur --</option>
+            {% for c in customers %}
+            <option value="{{ c.id }}" {% if vehicle and vehicle.owner_id == c.id %}selected{% endif %}>
+              {{ c.full_name }} {% if c.phone %}({{ c.phone }}){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Yeni Müşteri Adı</label>
+          <input type="text" name="new_owner_name" class="form-control" placeholder="Sadece yeni kayıt için">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Yeni Müşteri Tel</label>
+          <input type="text" name="new_owner_phone" class="form-control" placeholder="05xx xxx xxxx">
+        </div>
+
+        <div class="col-12"><hr class="my-1"><h6 class="text-muted">Belgeler</h6></div>
+
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Sigorta Bitiş Tarihi</label>
+          <input type="date" name="insurance_expiry" class="form-control"
+                 value="{{ vehicle.insurance_expiry.strftime('%Y-%m-%d') if vehicle and vehicle.insurance_expiry else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Muayene Bitiş Tarihi</label>
+          <input type="date" name="inspection_expiry" class="form-control"
+                 value="{{ vehicle.inspection_expiry.strftime('%Y-%m-%d') if vehicle and vehicle.inspection_expiry else '' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Notlar</label>
+          <textarea name="notes" class="form-control" rows="3">{{ vehicle.notes if vehicle else '' }}</textarea>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>Kaydet
+          </button>
+          <a href="{{ url_for('vehicles') }}" class="btn btn-outline-secondary">İptal</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

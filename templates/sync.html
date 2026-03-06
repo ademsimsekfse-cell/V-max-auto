@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Senkronizasyon - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat me-2"></i>Senkronizasyon</h4>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="POST">
+      <p class="text-muted">Manuel senkronizasyon başlatmak için aşağıdaki butona tıklayın.</p>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-arrow-repeat me-1"></i>Senkronizasyonu Başlat
+      </button>
+    </form>
+  </div>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white fw-bold">Senkronizasyon Geçmişi</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>Zaman</th><th>Tür</th><th>Durum</th><th>Kayıt Sayısı</th><th>Notlar</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.sync_time.strftime('%d.%m.%Y %H:%M') }}</td>
+          <td>{{ log.sync_type or '-' }}</td>
+          <td>
+            <span class="badge {% if log.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+              {{ log.status }}
+            </span>
+          </td>
+          <td>{{ log.records_synced }}</td>
+          <td class="text-muted small">{{ log.notes or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Kayıt yok.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

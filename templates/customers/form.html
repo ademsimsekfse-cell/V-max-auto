@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{% if customer %}Müşteri Düzenle{% else %}Yeni Müşteri{% endif %} - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold">
+    <i class="bi bi-person me-2"></i>{% if customer %}Müşteri Düzenle{% else %}Yeni Müşteri{% endif %}
+  </h4>
+  <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Geri
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <form method="POST">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Ad Soyad *</label>
+          <input type="text" name="full_name" class="form-control"
+                 value="{{ customer.full_name if customer else '' }}" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Telefon</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ customer.phone if customer else '' }}" placeholder="05xx xxx xxxx">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">E-posta</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ customer.email if customer else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Adres</label>
+          <textarea name="address" class="form-control" rows="2">{{ customer.address if customer else '' }}</textarea>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">TC Kimlik No</label>
+          <input type="text" name="id_number" class="form-control" maxlength="11"
+                 value="{{ customer.id_number if customer else '' }}">
+        </div>
+        <div class="col-md-3">
+          <!-- spacer -->
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Notlar</label>
+          <textarea name="notes" class="form-control" rows="3">{{ customer.notes if customer else '' }}</textarea>
+        </div>
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>Kaydet
+          </button>
+          <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary">İptal</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

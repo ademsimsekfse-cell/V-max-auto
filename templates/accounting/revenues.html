@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Gelirler - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-currency-dollar me-2"></i>Gelirler (Faturalar)</h4>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Fatura No</th>
+            <th>Servis No</th>
+            <th>Plaka</th>
+            <th>Ara Toplam</th>
+            <th>KDV</th>
+            <th>Son Tutar</th>
+            <th>Ödeme Yöntemi</th>
+            <th>Durum</th>
+            <th>Tarih</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+          <tr>
+            <td><span class="badge bg-success">{{ inv.invoice_no }}</span></td>
+            <td><span class="badge bg-secondary">{{ inv.service_record.record_no }}</span></td>
+            <td>{{ inv.service_record.vehicle.plate }}</td>
+            <td>₺{{ "%.2f"|format(inv.subtotal) }}</td>
+            <td>₺{{ "%.2f"|format(inv.tax_amount) }}</td>
+            <td class="fw-bold">₺{{ "%.2f"|format(inv.final_amount) }}</td>
+            <td>{{ inv.payment_method or '-' }}</td>
+            <td>
+              {% if inv.status == 'paid' %}<span class="badge bg-success">Ödendi</span>
+              {% elif inv.status == 'draft' %}<span class="badge bg-secondary">Taslak</span>
+              {% elif inv.status == 'sent' %}<span class="badge bg-info">Gönderildi</span>
+              {% else %}<span class="badge bg-danger">İptal</span>{% endif %}
+            </td>
+            <td class="text-muted small">{{ inv.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">Fatura bulunamadı.</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if invoices %}
+        <tfoot class="table-light">
+          <tr>
+            <td colspan="5" class="text-end fw-bold">Toplam (Ödenenler):</td>
+            <td class="fw-bold text-success">
+              ₺{{ "%.2f"|format(invoices | selectattr('status', 'equalto', 'paid') | sum(attribute='final_amount')) }}
+            </td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

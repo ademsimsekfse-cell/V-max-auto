@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}{{ record.record_no }} - Servis Detayı{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold">
+    <i class="bi bi-tools me-2"></i>{{ record.record_no }}
+    {% if record.status == 'waiting' %}<span class="badge status-waiting ms-2">Bekliyor</span>
+    {% elif record.status == 'in_progress' %}<span class="badge status-in_progress ms-2">İşlemde</span>
+    {% elif record.status == 'completed' %}<span class="badge status-completed ms-2">Tamamlandı</span>
+    {% else %}<span class="badge status-delivered ms-2">Teslim Edildi</span>{% endif %}
+  </h4>
+  <a href="{{ url_for('service_list') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Geri
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left column: vehicle & status -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-car-front me-2"></i>Araç Bilgileri</div>
+      <div class="card-body">
+        <h5 class="text-primary fw-bold">{{ record.vehicle.plate }}</h5>
+        <p class="mb-1">{{ record.vehicle.brand }} {{ record.vehicle.model }} {% if record.vehicle.year %}({{ record.vehicle.year }}){% endif %}</p>
+        <p class="mb-1 text-muted small">Renk: {{ record.vehicle.color or '-' }}</p>
+        {% if record.vehicle.owner %}
+        <hr class="my-2">
+        <p class="mb-1 fw-semibold">{{ record.vehicle.owner.full_name }}</p>
+        <p class="mb-0 text-muted small"><i class="bi bi-phone me-1"></i>{{ record.vehicle.owner.phone or '-' }}</p>
+        {% endif %}
+        <hr class="my-2">
+        <p class="mb-1 small"><span class="text-muted">Km:</span> {{ record.mileage or '-' }}</p>
+        <p class="mb-1 small"><span class="text-muted">Yakıt:</span> {{ record.fuel_level or '-' }}</p>
+        <p class="mb-1 small"><span class="text-muted">Birim:</span> {{ record.unit.name if record.unit else '-' }}</p>
+        <p class="mb-1 small"><span class="text-muted">Kabul Eden:</span> {{ record.acceptor.full_name if record.acceptor else '-' }}</p>
+        <p class="mb-0 small"><span class="text-muted">Açılış:</span> {{ record.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+      </div>
+    </div>
+
+    <!-- Status Update -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-arrow-repeat me-2"></i>Durum Güncelle</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('service_status', rid=record.id) }}">
+          <div class="d-grid gap-2">
+            {% if record.status != 'waiting' %}
+            <button type="submit" name="status" value="waiting" class="btn btn-warning">
+              <i class="bi bi-hourglass me-1"></i>Bekliyor
+            </button>
+            {% endif %}
+            {% if record.status != 'in_progress' %}
+            <button type="submit" name="status" value="in_progress" class="btn btn-primary">
+              <i class="bi bi-play-circle me-1"></i>İşleme Al
+            </button>
+            {% endif %}
+            {% if record.status != 'completed' %}
+            <button type="submit" name="status" value="completed" class="btn btn-success">
+              <i class="bi bi-check-circle me-1"></i>Tamamlandı
+            </button>
+            {% endif %}
+            {% if record.status != 'delivered' %}
+            <button type="submit" name="status" value="delivered" class="btn btn-secondary">
+              <i class="bi bi-truck me-1"></i>Teslim Edildi
+            </button>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Complaint -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-chat-left-text me-2"></i>Müşteri Şikayeti</div>
+      <div class="card-body">
+        <p class="mb-0">{{ record.complaint or 'Belirtilmemiş.' }}</p>
+        {% if record.notes %}<hr class="my-2"><small class="text-muted">{{ record.notes }}</small>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column: tasks, quotes, invoices -->
+  <div class="col-md-8">
+    <!-- Tasks -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-list-check me-2"></i>Görevler</div>
+      <div class="card-body">
+        {% if record.tasks %}
+        <div class="table-responsive mb-3">
+          <table class="table table-sm">
+            <thead class="table-light">
+              <tr><th>Açıklama</th><th>Teknisyen</th><th>İş Saati</th><th>Parça</th><th>İşçilik</th></tr>
+            </thead>
+            <tbody>
+              {% for t in record.tasks %}
+              <tr>
+                <td>{{ t.description }}</td>
+                <td>{{ t.technician.full_name if t.technician else '-' }}</td>
+                <td>{{ t.labor_hours }}</td>
+                <td>₺{{ "%.2f"|format(t.parts_cost) }}</td>
+                <td>₺{{ "%.2f"|format(t.labor_cost) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+        <!-- Add Task Form -->
+        <form method="POST" action="{{ url_for('service_tasks', rid=record.id) }}" class="border rounded p-3 bg-light">
+          <h6 class="mb-3">Yeni Görev Ekle</h6>
+          <div class="row g-2">
+            <div class="col-md-12">
+              <input type="text" name="description" class="form-control form-control-sm" placeholder="Görev açıklaması" required>
+            </div>
+            <div class="col-md-4">
+              <select name="technician_id" class="form-select form-select-sm">
+                <option value="">Teknisyen Seçin</option>
+                {% for tech in technicians %}
+                <option value="{{ tech.id }}">{{ tech.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <input type="number" name="labor_hours" class="form-control form-control-sm" placeholder="İş Saati" step="0.5" min="0">
+            </div>
+            <div class="col-md-2">
+              <input type="number" name="parts_cost" class="form-control form-control-sm" placeholder="Parça ₺" step="0.01" min="0">
+            </div>
+            <div class="col-md-2">
+              <input type="number" name="labor_cost" class="form-control form-control-sm" placeholder="İşçilik ₺" step="0.01" min="0">
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg me-1"></i>Ekle</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quotes -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Teklifler</span>
+        <a href="{{ url_for('service_quote', rid=record.id) }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-plus-lg me-1"></i>Yeni Teklif
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if record.quotes %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Teklif No</th><th>Toplam</th><th>KDV</th><th>Son Tutar</th><th>Durum</th><th>Tarih</th></tr>
+            </thead>
+            <tbody>
+              {% for q in record.quotes %}
+              <tr>
+                <td><span class="badge bg-info text-dark">{{ q.quote_no }}</span></td>
+                <td>₺{{ "%.2f"|format(q.total_amount) }}</td>
+                <td>₺{{ "%.2f"|format(q.tax_amount) }}</td>
+                <td><strong>₺{{ "%.2f"|format(q.final_amount) }}</strong></td>
+                <td>
+                  {% if q.status == 'draft' %}<span class="badge bg-secondary">Taslak</span>
+                  {% elif q.status == 'sent' %}<span class="badge bg-info">Gönderildi</span>
+                  {% elif q.status == 'approved' %}<span class="badge bg-success">Onaylandı</span>
+                  {% else %}<span class="badge bg-danger">Reddedildi</span>{% endif %}
+                </td>
+                <td class="small text-muted">{{ q.created_at.strftime('%d.%m.%Y') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3 mb-0">Teklif yok.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Invoices -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-receipt me-2"></i>Faturalar</span>
+        <a href="{{ url_for('service_invoice', rid=record.id) }}" class="btn btn-sm btn-outline-success">
+          <i class="bi bi-plus-lg me-1"></i>Yeni Fatura
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% if record.invoices %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Fatura No</th><th>Ara Toplam</th><th>KDV</th><th>Son Tutar</th><th>Ödeme</th><th>Durum</th><th>Tarih</th></tr>
+            </thead>
+            <tbody>
+              {% for inv in record.invoices %}
+              <tr>
+                <td><span class="badge bg-success">{{ inv.invoice_no }}</span></td>
+                <td>₺{{ "%.2f"|format(inv.subtotal) }}</td>
+                <td>₺{{ "%.2f"|format(inv.tax_amount) }}</td>
+                <td><strong>₺{{ "%.2f"|format(inv.final_amount) }}</strong></td>
+                <td>{{ inv.payment_method or '-' }}</td>
+                <td>
+                  {% if inv.status == 'draft' %}<span class="badge bg-secondary">Taslak</span>
+                  {% elif inv.status == 'sent' %}<span class="badge bg-info">Gönderildi</span>
+                  {% elif inv.status == 'paid' %}<span class="badge bg-success">Ödendi</span>
+                  {% else %}<span class="badge bg-danger">İptal</span>{% endif %}
+                </td>
+                <td class="small text-muted">{{ inv.created_at.strftime('%d.%m.%Y') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3 mb-0">Fatura yok.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

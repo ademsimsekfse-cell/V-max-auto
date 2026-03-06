@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Ayarlar - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-gear me-2"></i>Sistem Ayarları</h4>
+</div>
+
+<!-- Nav Tabs -->
+<ul class="nav nav-pills mb-4" id="settingsTabs">
+  <li class="nav-item">
+    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#unitsTab">
+      <i class="bi bi-building me-1"></i>Birimler
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#usersTab">
+      <i class="bi bi-people me-1"></i>Kullanıcılar
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#categoriesTab">
+      <i class="bi bi-tags me-1"></i>Gider Kategorileri
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#generalTab">
+      <i class="bi bi-sliders me-1"></i>Genel
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content">
+
+  <!-- Units Tab -->
+  <div class="tab-pane fade show active" id="unitsTab">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Yeni Birim Ekle</div>
+          <div class="card-body">
+            <form method="POST">
+              <input type="hidden" name="action" value="add_unit">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Birim Adı *</label>
+                <input type="text" name="name" class="form-control" required placeholder="Kaporta, Boya...">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Açıklama</label>
+                <input type="text" name="description" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-plus-lg me-1"></i>Ekle
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Mevcut Birimler</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Birim</th><th>Açıklama</th><th>Durum</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for u in units %}
+                <tr>
+                  <td>{{ u.name }}</td>
+                  <td class="text-muted small">{{ u.description or '-' }}</td>
+                  <td>
+                    <span class="badge {% if u.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                      {% if u.is_active %}Aktif{% else %}Pasif{% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    <form method="POST" class="d-inline">
+                      <input type="hidden" name="action" value="toggle_unit">
+                      <input type="hidden" name="unit_id" value="{{ u.id }}">
+                      <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                        {% if u.is_active %}<i class="bi bi-pause-circle"></i>{% else %}<i class="bi bi-play-circle"></i>{% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div class="tab-pane fade" id="usersTab">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Yeni Kullanıcı Ekle</div>
+          <div class="card-body">
+            <form method="POST">
+              <input type="hidden" name="action" value="add_user">
+              <div class="mb-2">
+                <label class="form-label fw-semibold">Kullanıcı Adı *</label>
+                <input type="text" name="username" class="form-control" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label fw-semibold">Ad Soyad *</label>
+                <input type="text" name="full_name" class="form-control" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label fw-semibold">Şifre *</label>
+                <input type="password" name="password" class="form-control" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label fw-semibold">Rol *</label>
+                <select name="role" class="form-select">
+                  <option value="usta">Usta</option>
+                  <option value="muhasebe">Muhasebe</option>
+                  <option value="admin">Yönetici</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Birim</label>
+                <select name="unit_id" class="form-select">
+                  <option value="">Seçin</option>
+                  {% for u in units %}
+                  <option value="{{ u.id }}">{{ u.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-person-plus me-1"></i>Ekle
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Kullanıcılar</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Ad Soyad</th><th>Kullanıcı Adı</th><th>Rol</th><th>Birim</th><th>Durum</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for u in users %}
+                <tr>
+                  <td>{{ u.full_name }}</td>
+                  <td><code>{{ u.username }}</code></td>
+                  <td><span class="badge bg-primary">{{ u.role_display }}</span></td>
+                  <td>{{ u.unit.name if u.unit else '-' }}</td>
+                  <td>
+                    <span class="badge {% if u.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                      {% if u.is_active %}Aktif{% else %}Pasif{% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    {% if u.id != current_user.id %}
+                    <form method="POST" class="d-inline">
+                      <input type="hidden" name="action" value="toggle_user">
+                      <input type="hidden" name="user_id" value="{{ u.id }}">
+                      <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                        {% if u.is_active %}<i class="bi bi-pause-circle"></i>{% else %}<i class="bi bi-play-circle"></i>{% endif %}
+                      </button>
+                    </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Tab -->
+  <div class="tab-pane fade" id="categoriesTab">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Yeni Kategori Ekle</div>
+          <div class="card-body">
+            <form method="POST">
+              <input type="hidden" name="action" value="add_category">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Kategori Adı *</label>
+                <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Açıklama</label>
+                <input type="text" name="description" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-plus-lg me-1"></i>Ekle
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-bold">Ortak Gider Kategorileri</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Kategori</th><th>Açıklama</th><th>Durum</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for c in categories %}
+                <tr>
+                  <td>{{ c.name }}</td>
+                  <td class="text-muted small">{{ c.description or '-' }}</td>
+                  <td>
+                    <span class="badge {% if c.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                      {% if c.is_active %}Aktif{% else %}Pasif{% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    <form method="POST" class="d-inline">
+                      <input type="hidden" name="action" value="toggle_category">
+                      <input type="hidden" name="category_id" value="{{ c.id }}">
+                      <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                        {% if c.is_active %}<i class="bi bi-pause-circle"></i>{% else %}<i class="bi bi-play-circle"></i>{% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Settings Tab -->
+  <div class="tab-pane fade" id="generalTab">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">Şirket Bilgileri</div>
+        <div class="card-body">
+          <form method="POST">
+            <input type="hidden" name="action" value="save_settings">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Şirket Adı</label>
+              <input type="text" name="company_name" class="form-control"
+                     value="{{ app_settings.get('company_name', 'V-MAX OTOMOTİV') }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Telefon</label>
+              <input type="text" name="company_phone" class="form-control"
+                     value="{{ app_settings.get('company_phone', '') }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Adres</label>
+              <textarea name="company_address" class="form-control" rows="3">{{ app_settings.get('company_address', '') }}</textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Vergi No</label>
+              <input type="text" name="tax_no" class="form-control"
+                     value="{{ app_settings.get('tax_no', '') }}">
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>Kaydet
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
