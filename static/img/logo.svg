@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <rect width="400" height="200" fill="none"/>
+  <polygon points="20,40 80,160 140,40" fill="#1a3a5c"/>
+  <polygon points="100,40 160,160 220,40" fill="#2e6da4"/>
+  <text x="240" y="100" font-family="Arial Black,sans-serif" font-size="48" font-weight="900" fill="#1a3a5c">MAX</text>
+  <text x="240" y="140" font-family="Arial,sans-serif" font-size="18" fill="#2e6da4">OTOMOTİV</text>
+</svg>

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Yeni Servis Kaydı - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-tools me-2"></i>Yeni Servis Kaydı</h4>
+  <a href="{{ url_for('service_list') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Geri
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <form method="POST" id="serviceForm">
+      <div class="row g-3">
+
+        <!-- Plate lookup section -->
+        <div class="col-12">
+          <h6 class="text-muted border-bottom pb-2">Araç Bilgileri</h6>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Plaka *</label>
+          <input type="text" id="plate" name="plate" class="form-control text-uppercase"
+                 value="{{ request.args.get('plate', '') }}" required
+                 placeholder="34ABC123" style="text-transform:uppercase">
+        </div>
+        <div class="col-md-9">
+          <div id="vehicle-info-box" style="display:none" class="mt-4"></div>
+        </div>
+
+        <input type="hidden" id="vehicle_id" name="vehicle_id">
+
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Marka</label>
+          <input type="text" id="brand" name="brand" class="form-control" placeholder="Otomatik doldurulur">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Model</label>
+          <input type="text" id="model" name="model" class="form-control" placeholder="Otomatik doldurulur">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Yıl</label>
+          <input type="number" id="year" name="year" class="form-control" placeholder="2020">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Renk</label>
+          <input type="text" id="color" name="color" class="form-control" placeholder="Beyaz">
+        </div>
+
+        <div class="col-12">
+          <h6 class="text-muted border-bottom pb-2 mt-2">Teslim Eden Kişi</h6>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Ad Soyad</label>
+          <input type="text" id="owner_name" name="owner_name" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Telefon</label>
+          <input type="text" id="owner_phone" name="owner_phone" class="form-control" placeholder="05xx xxx xxxx">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Teslim Eden (Farklıysa)</label>
+          <input type="text" name="delivery_person_name" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Teslim Eden Tel</label>
+          <input type="text" name="delivery_person_phone" class="form-control">
+        </div>
+
+        <div class="col-12">
+          <h6 class="text-muted border-bottom pb-2 mt-2">Servis Detayları</h6>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Müşteri Şikayeti *</label>
+          <textarea name="complaint" class="form-control" rows="3" placeholder="Araçtaki sorun veya istenilen işlem..." required></textarea>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Km (Kilometre)</label>
+          <input type="number" name="mileage" class="form-control" placeholder="125000">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Yakıt Seviyesi</label>
+          <select name="fuel_level" class="form-select">
+            <option value="">Seçin</option>
+            <option value="bos">Boş</option>
+            <option value="1/4">1/4</option>
+            <option value="1/2">1/2</option>
+            <option value="3/4">3/4</option>
+            <option value="dolu">Dolu</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Birim</label>
+          <select name="unit_id" class="form-select">
+            <option value="">Seçin</option>
+            {% for u in units %}
+            <option value="{{ u.id }}">{{ u.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Tahmini Teslim</label>
+          <input type="datetime-local" name="estimated_delivery" class="form-control">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Notlar</label>
+          <textarea name="notes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="bi bi-check-circle me-1"></i>Servis Kaydı Oluştur
+          </button>
+          <a href="{{ url_for('service_list') }}" class="btn btn-outline-secondary btn-lg">İptal</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const plate = document.getElementById('plate');
+  if (plate && plate.value) {
+    lookupPlate(plate.value);
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
+  <span class="text-muted small">{{ now.strftime('%d.%m.%Y %H:%M') }}</span>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card border-0">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon text-primary me-3"><i class="bi bi-tools"></i></div>
+        <div>
+          <div class="text-muted small">Aktif Servis</div>
+          <div class="fs-2 fw-bold text-primary">{{ active_services }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card border-0">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon text-warning me-3"><i class="bi bi-hourglass-split"></i></div>
+        <div>
+          <div class="text-muted small">Bekleyen</div>
+          <div class="fs-2 fw-bold text-warning">{{ waiting }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card border-0">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon text-success me-3"><i class="bi bi-check-circle"></i></div>
+        <div>
+          <div class="text-muted small">Tamamlanan</div>
+          <div class="fs-2 fw-bold text-success">{{ completed }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card stat-card border-0">
+      <div class="card-body d-flex align-items-center">
+        <div class="stat-icon text-info me-3"><i class="bi bi-cash-coin"></i></div>
+        <div>
+          <div class="text-muted small">Bugünkü Gelir</div>
+          <div class="fs-2 fw-bold text-info">₺{{ "%.2f"|format(today_revenue) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Service Records -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Son Servis Kayıtları</h6>
+    <a href="{{ url_for('service_list') }}" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Kayıt No</th>
+            <th>Plaka</th>
+            <th>Araç</th>
+            <th>Durum</th>
+            <th>Birim</th>
+            <th>Tarih</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rec in recent_records %}
+          <tr>
+            <td><span class="badge bg-secondary">{{ rec.record_no }}</span></td>
+            <td><strong>{{ rec.vehicle.plate }}</strong></td>
+            <td>{{ rec.vehicle.brand }} {{ rec.vehicle.model }}</td>
+            <td>
+              {% if rec.status == 'waiting' %}<span class="badge status-waiting">Bekliyor</span>
+              {% elif rec.status == 'in_progress' %}<span class="badge status-in_progress">İşlemde</span>
+              {% elif rec.status == 'completed' %}<span class="badge status-completed">Tamamlandı</span>
+              {% else %}<span class="badge status-delivered">Teslim Edildi</span>{% endif %}
+            </td>
+            <td>{{ rec.unit.name if rec.unit else '-' }}</td>
+            <td class="text-muted small">{{ rec.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td><a href="{{ url_for('service_detail', rid=rec.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">Henüz servis kaydı yok.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab-container">
+  <div class="fab-options">
+    <a href="{{ url_for('service_new') }}" class="fab-option">
+      <i class="bi bi-tools"></i><span>Yeni Servis Kaydı</span>
+    </a>
+    <a href="{{ url_for('vehicle_new') }}" class="fab-option">
+      <i class="bi bi-car-front"></i><span>Yeni Araç</span>
+    </a>
+    <a href="{{ url_for('customer_new') }}" class="fab-option">
+      <i class="bi bi-person-plus"></i><span>Yeni Müşteri</span>
+    </a>
+  </div>
+  <button class="fab-main" title="Yeni kayıt oluştur">+</button>
+</div>
+{% endblock %}

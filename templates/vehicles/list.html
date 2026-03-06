@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Araçlar - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-car-front me-2"></i>Araçlar</h4>
+  <a href="{{ url_for('vehicle_new') }}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Yeni Araç
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-8">
+        <input type="text" name="q" class="form-control" placeholder="Plaka, marka, model veya müşteri adı ile arayın..."
+               value="{{ q }}">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Ara</button>
+      </div>
+      {% if q %}
+      <div class="col-md-2">
+        <a href="{{ url_for('vehicles') }}" class="btn btn-outline-secondary w-100">Temizle</a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Plaka</th>
+            <th>Marka / Model</th>
+            <th>Yıl</th>
+            <th>Renk</th>
+            <th>Sahip</th>
+            <th>Sigorta Bitiş</th>
+            <th>Muayene Bitiş</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vehicles %}
+          <tr>
+            <td><strong class="text-primary">{{ v.plate }}</strong></td>
+            <td>{{ v.brand or '' }} {{ v.model or '' }}</td>
+            <td>{{ v.year or '-' }}</td>
+            <td>{{ v.color or '-' }}</td>
+            <td>{{ v.owner.full_name if v.owner else '<span class="text-muted">-</span>' | safe }}</td>
+            <td>
+              {% if v.insurance_expiry %}
+                <span class="{% if v.insurance_expiry < now.date() %}text-danger{% elif (v.insurance_expiry - now.date()).days < 30 %}text-warning{% else %}text-success{% endif %}">
+                  {{ v.insurance_expiry.strftime('%d.%m.%Y') }}
+                </span>
+              {% else %}-{% endif %}
+            </td>
+            <td>
+              {% if v.inspection_expiry %}
+                <span class="{% if v.inspection_expiry < now.date() %}text-danger{% elif (v.inspection_expiry - now.date()).days < 30 %}text-warning{% else %}text-success{% endif %}">
+                  {{ v.inspection_expiry.strftime('%d.%m.%Y') }}
+                </span>
+              {% else %}-{% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn btn-sm btn-outline-primary me-1" title="Detay">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{{ url_for('vehicle_edit', vid=v.id) }}" class="btn btn-sm btn-outline-secondary me-1" title="Düzenle">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{{ url_for('service_new') }}?plate={{ v.plate }}" class="btn btn-sm btn-outline-success" title="Yeni Servis">
+                <i class="bi bi-tools"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">Araç bulunamadı.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

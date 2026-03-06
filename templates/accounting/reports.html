@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Raporlar - V-MAX OTOMOTİV{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-file-earmark-bar-graph me-2"></i>Raporlar</h4>
+</div>
+
+<!-- Date Filter -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Başlangıç Tarihi</label>
+        <input type="date" name="start" class="form-control" value="{{ start_date }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Bitiş Tarihi</label>
+        <input type="date" name="end" class="form-control" value="{{ end_date }}">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel me-1"></i>Filtrele
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat-card border-0 border-start border-success border-4">
+      <div class="card-body">
+        <div class="text-muted small">Toplam Gelir</div>
+        <div class="fs-3 fw-bold text-success">₺{{ "%.2f"|format(total_rev) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card border-0 border-start border-danger border-4">
+      <div class="card-body">
+        <div class="text-muted small">Toplam Gider</div>
+        <div class="fs-3 fw-bold text-danger">₺{{ "%.2f"|format(total_exp) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card border-0 border-start {% if net >= 0 %}border-primary{% else %}border-danger{% endif %} border-4">
+      <div class="card-body">
+        <div class="text-muted small">Net Kâr / Zarar</div>
+        <div class="fs-3 fw-bold {% if net >= 0 %}text-primary{% else %}text-danger{% endif %}">₺{{ "%.2f"|format(net) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Birim Raporu -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white fw-bold">
+    <i class="bi bi-building me-2"></i>Birim Bazlı Rapor
+    <small class="text-muted ms-2">{{ start_date.strftime('%d.%m.%Y') }} — {{ end_date.strftime('%d.%m.%Y') }}</small>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Birim</th>
+            <th class="text-end">Gelir (₺)</th>
+            <th class="text-end">Birim Gideri (₺)</th>
+            <th class="text-end">Net (₺)</th>
+            <th>Kâr Marjı</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report_data %}
+          <tr>
+            <td>{{ row.unit.name }}</td>
+            <td class="text-end text-success">{{ "%.2f"|format(row.revenue) }}</td>
+            <td class="text-end text-danger">{{ "%.2f"|format(row.expense) }}</td>
+            <td class="text-end fw-bold {% if row.net >= 0 %}text-primary{% else %}text-danger{% endif %}">
+              {{ "%.2f"|format(row.net) }}
+            </td>
+            <td>
+              {% if row.revenue > 0 %}
+              <div class="progress" style="height:8px; min-width:80px">
+                <div class="progress-bar {% if row.net >= 0 %}bg-success{% else %}bg-danger{% endif %}"
+                     style="width:{{ [[(row.net / row.revenue * 100)|round|int, 0]|max, 100]|min }}%"></div>
+              </div>
+              <small class="text-muted">{{ "%.1f"|format(row.net / row.revenue * 100) }}%</small>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-4">Veri yok.</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if report_data %}
+        <tfoot class="table-light fw-bold">
+          <tr>
+            <td>TOPLAM</td>
+            <td class="text-end text-success">{{ "%.2f"|format(total_rev) }}</td>
+            <td class="text-end text-danger">{{ "%.2f"|format(total_exp - shared_total) }}</td>
+            <td class="text-end {% if net >= 0 %}text-primary{% else %}text-danger{% endif %}">{{ "%.2f"|format(net) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Shared expenses summary -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white fw-bold"><i class="bi bi-share me-2"></i>Ortak Gider Özeti</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded text-center">
+          <div class="text-muted small">Dönem Toplam Ortak Gider</div>
+          <div class="fs-4 fw-bold text-danger">₺{{ "%.2f"|format(shared_total) }}</div>
+        </div>
+      </div>
+      {% if report_data %}
+      <div class="col-md-8">
+        <small class="text-muted">Ortak giderler birim sayısına göre paylaştırılmış değerlendirme için raporlara bakınız.</small>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
