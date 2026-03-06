@@ -55,7 +55,7 @@ class SharedExpense(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('shared_expense_categories.id'))
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
-    date = db.Column(db.Date, default=datetime.utcnow().date)
+    date = db.Column(db.Date, default=lambda: datetime.utcnow().date())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -67,7 +67,7 @@ class UnitExpense(db.Model):
     category = db.Column(db.String(100))
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
-    date = db.Column(db.Date, default=datetime.utcnow().date)
+    date = db.Column(db.Date, default=lambda: datetime.utcnow().date())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     unit_ref = db.relationship('Unit', backref='unit_expenses', foreign_keys=[unit_id])
