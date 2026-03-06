@@ -2,10 +2,14 @@
 {% block title %}Giderler{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>💸 Giderler</h1>
+  <h1>
+    <span class="ph-icon tile-red">💸</span>
+    Giderler
+  </h1>
   <a href="{{ url_for('expenses.create_expense') }}" class="btn btn-primary">+ Yeni Gider</a>
 </div>
 {% if expenses %}
+<div class="table-wrap">
 <table class="table">
   <thead>
     <tr><th>Tarih</th><th>Kategori</th><th>Açıklama</th><th>Tutar</th><th>İşlemler</th></tr>
@@ -18,15 +22,16 @@
       <td>{{ e.description }}</td>
       <td><strong>{{ "%.2f"|format(e.amount) }} ₺</strong></td>
       <td>
-        <a href="{{ url_for('expenses.edit_expense', expense_id=e.id) }}" class="btn btn-sm btn-secondary">Düzenle</a>
+        <a href="{{ url_for('expenses.edit_expense', expense_id=e.id) }}" class="btn btn-sm btn-secondary">✏️ Düzenle</a>
         <form method="post" action="{{ url_for('expenses.delete_expense', expense_id=e.id) }}" style="display:inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
-          <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+          <button type="submit" class="btn btn-sm btn-danger">🗑️ Sil</button>
         </form>
       </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
 <p class="empty-msg">Henüz gider eklenmemiş.</p>
 {% endif %}

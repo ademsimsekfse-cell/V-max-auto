@@ -1,47 +1,136 @@
 {% extends "base.html" %}
 {% block title %}Dashboard – V-max Auto{% endblock %}
 {% block content %}
-<h1>📊 Dashboard</h1>
+
+<!-- Hero banner -->
+<div class="hero">
+  <h1>Hoş Geldiniz, <span>V-max Auto</span> 👋</h1>
+  <p>Oto servis otomasyon ve muhasebe panelinize hoş geldiniz. Aşağıdan işlemlerinizi yönetebilirsiniz.</p>
+</div>
+
+<!-- ── STATS ROW ──────────────────────────────────────── -->
+<p class="section-title">Genel Durum</p>
 <div class="stats-grid">
   <div class="stat-card blue">
+    <span class="stat-icon">👥</span>
     <h2>{{ total_customers }}</h2>
-    <p>👥 Toplam Müşteri</p>
+    <p>Toplam Müşteri</p>
   </div>
   <div class="stat-card green">
+    <span class="stat-icon">🚗</span>
     <h2>{{ total_vehicles }}</h2>
-    <p>🚗 Toplam Araç</p>
+    <p>Toplam Araç</p>
   </div>
   <div class="stat-card orange">
+    <span class="stat-icon">🛠️</span>
     <h2>{{ open_orders }}</h2>
-    <p>🛠️ Açık Servis Emri</p>
+    <p>Açık Servis Emri</p>
   </div>
   <div class="stat-card red">
+    <span class="stat-icon">🧾</span>
     <h2>{{ pending_invoices }}</h2>
-    <p>🧾 Bekleyen Fatura</p>
+    <p>Bekleyen Fatura</p>
   </div>
-</div>
-
-<div class="stats-grid" style="margin-top:1rem">
   <div class="stat-card green">
-    <h2>{{ "%.2f"|format(total_income) }} ₺</h2>
-    <p>💰 Toplam Gelir</p>
+    <span class="stat-icon">💰</span>
+    <h2>{{ "%.0f"|format(total_income) }}₺</h2>
+    <p>Toplam Gelir</p>
   </div>
   <div class="stat-card red">
-    <h2>{{ "%.2f"|format(total_expenses) }} ₺</h2>
-    <p>💸 Toplam Gider</p>
+    <span class="stat-icon">💸</span>
+    <h2>{{ "%.0f"|format(total_expenses) }}₺</h2>
+    <p>Toplam Gider</p>
   </div>
   <div class="stat-card {% if net_profit >= 0 %}blue{% else %}red{% endif %}">
-    <h2>{{ "%.2f"|format(net_profit) }} ₺</h2>
-    <p>📈 Net Kâr / Zarar</p>
+    <span class="stat-icon">{% if net_profit >= 0 %}📈{% else %}📉{% endif %}</span>
+    <h2>{{ "%.0f"|format(net_profit) }}₺</h2>
+    <p>Net Kâr / Zarar</p>
   </div>
 </div>
 
-<div class="quick-links">
-  <h2>Hızlı Erişim</h2>
-  <a href="{{ url_for('customers.create_customer') }}" class="btn btn-primary">+ Müşteri Ekle</a>
-  <a href="{{ url_for('vehicles.create_vehicle') }}" class="btn btn-primary">+ Araç Ekle</a>
-  <a href="{{ url_for('service_orders.create_order') }}" class="btn btn-primary">+ Servis Emri</a>
-  <a href="{{ url_for('invoices.create_invoice') }}" class="btn btn-primary">+ Fatura Oluştur</a>
-  <a href="{{ url_for('expenses.create_expense') }}" class="btn btn-primary">+ Gider Ekle</a>
+<!-- ── GROUP 1 : Müşteri & Araç ─────────────────────── -->
+<div class="module-section">
+  <p class="section-title">👥 Müşteri & Araç Yönetimi</p>
+  <div class="module-grid">
+
+    <a href="{{ url_for('customers.list_customers') }}" class="module-card">
+      <div class="tile-icon tile-blue">👥</div>
+      <span class="tile-label">Müşteriler</span>
+      <span class="tile-sub">Listeyi Gör</span>
+    </a>
+
+    <a href="{{ url_for('customers.create_customer') }}" class="module-card">
+      <div class="tile-icon tile-green">➕</div>
+      <span class="tile-label">Yeni Müşteri</span>
+      <span class="tile-sub">Ekle</span>
+    </a>
+
+    <a href="{{ url_for('vehicles.list_vehicles') }}" class="module-card">
+      <div class="tile-icon tile-orange">🚗</div>
+      <span class="tile-label">Araçlar</span>
+      <span class="tile-sub">Listeyi Gör</span>
+    </a>
+
+    <a href="{{ url_for('vehicles.create_vehicle') }}" class="module-card">
+      <div class="tile-icon tile-teal">🚙</div>
+      <span class="tile-label">Yeni Araç</span>
+      <span class="tile-sub">Ekle</span>
+    </a>
+
+  </div>
 </div>
+
+<!-- ── GROUP 2 : Servis ──────────────────────────────── -->
+<div class="module-section">
+  <p class="section-title">🛠️ Servis Yönetimi</p>
+  <div class="module-grid">
+
+    <a href="{{ url_for('service_orders.list_orders') }}" class="module-card">
+      <div class="tile-icon tile-purple">🛠️</div>
+      <span class="tile-label">Servis Emirleri</span>
+      <span class="tile-sub">Listeyi Gör</span>
+    </a>
+
+    <a href="{{ url_for('service_orders.create_order') }}" class="module-card">
+      <div class="tile-icon tile-orange">📋</div>
+      <span class="tile-label">Yeni Servis Emri</span>
+      <span class="tile-sub">Oluştur</span>
+    </a>
+
+  </div>
+</div>
+
+<!-- ── GROUP 3 : Finans ──────────────────────────────── -->
+<div class="module-section">
+  <p class="section-title">💰 Finans & Muhasebe</p>
+  <div class="module-grid">
+
+    <a href="{{ url_for('invoices.list_invoices') }}" class="module-card">
+      <div class="tile-icon tile-yellow">🧾</div>
+      <span class="tile-label">Faturalar</span>
+      <span class="tile-sub">Listeyi Gör</span>
+    </a>
+
+    <a href="{{ url_for('invoices.create_invoice') }}" class="module-card">
+      <div class="tile-icon tile-green">🖨️</div>
+      <span class="tile-label">Yeni Fatura</span>
+      <span class="tile-sub">Oluştur</span>
+    </a>
+
+    <a href="{{ url_for('expenses.list_expenses') }}" class="module-card">
+      <div class="tile-icon tile-red">💸</div>
+      <span class="tile-label">Giderler</span>
+      <span class="tile-sub">Listeyi Gör</span>
+    </a>
+
+    <a href="{{ url_for('expenses.create_expense') }}" class="module-card">
+      <div class="tile-icon tile-pink">➕</div>
+      <span class="tile-label">Yeni Gider</span>
+      <span class="tile-sub">Ekle</span>
+    </a>
+
+  </div>
+</div>
+
 {% endblock %}
+
