@@ -2,10 +2,14 @@
 {% block title %}Müşteriler{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>👥 Müşteriler</h1>
+  <h1>
+    <span class="ph-icon tile-blue">👥</span>
+    Müşteriler
+  </h1>
   <a href="{{ url_for('customers.create_customer') }}" class="btn btn-primary">+ Yeni Müşteri</a>
 </div>
 {% if customers %}
+<div class="table-wrap">
 <table class="table">
   <thead>
     <tr><th>ID</th><th>Ad Soyad</th><th>Telefon</th><th>E-posta</th><th>Araçlar</th><th>İşlemler</th></tr>
@@ -14,20 +18,21 @@
     {% for c in customers %}
     <tr>
       <td>{{ c.id }}</td>
-      <td>{{ c.name }}</td>
+      <td><strong>{{ c.name }}</strong></td>
       <td>{{ c.phone }}</td>
       <td>{{ c.email or '-' }}</td>
       <td>{{ c.vehicles|length }}</td>
       <td>
-        <a href="{{ url_for('customers.edit_customer', customer_id=c.id) }}" class="btn btn-sm btn-secondary">Düzenle</a>
+        <a href="{{ url_for('customers.edit_customer', customer_id=c.id) }}" class="btn btn-sm btn-secondary">✏️ Düzenle</a>
         <form method="post" action="{{ url_for('customers.delete_customer', customer_id=c.id) }}" style="display:inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
-          <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+          <button type="submit" class="btn btn-sm btn-danger">🗑️ Sil</button>
         </form>
       </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
 <p class="empty-msg">Henüz müşteri eklenmemiş.</p>
 {% endif %}
