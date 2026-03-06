@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Faturalar{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🧾 Faturalar</h1>
+  <a href="{{ url_for('invoices.create_invoice') }}" class="btn btn-primary">+ Yeni Fatura</a>
+</div>
+{% if invoices %}
+<table class="table">
+  <thead>
+    <tr><th>ID</th><th>Servis Emri</th><th>Tutar</th><th>Durum</th><th>Tarih</th><th>İşlemler</th></tr>
+  </thead>
+  <tbody>
+    {% for i in invoices %}
+    <tr>
+      <td>{{ i.id }}</td>
+      <td>#{{ i.service_order_id }}</td>
+      <td><strong>{{ "%.2f"|format(i.amount) }} ₺</strong></td>
+      <td><span class="badge {% if i.status == 'Ödendi' %}badge-done{% else %}badge-open{% endif %}">{{ i.status }}</span></td>
+      <td>{{ i.issued_at.strftime('%d.%m.%Y') if i.issued_at else '-' }}</td>
+      <td>
+        {% if i.status != 'Ödendi' %}
+        <form method="post" action="{{ url_for('invoices.mark_paid', invoice_id=i.id) }}" style="display:inline">
+          <button type="submit" class="btn btn-sm btn-primary">✅ Ödendi</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('invoices.delete_invoice', invoice_id=i.id) }}" style="display:inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+          <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-msg">Henüz fatura oluşturulmamış.</p>
+{% endif %}
+{% endblock %}

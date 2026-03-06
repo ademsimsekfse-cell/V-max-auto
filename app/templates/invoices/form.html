@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Yeni Fatura{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>➕ Yeni Fatura</h1>
+  <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-secondary">← Geri</a>
+</div>
+<form method="post" class="form-card">
+  <label>Servis Emri *</label>
+  <select name="service_order_id" required>
+    {% for o in orders %}
+    <option value="{{ o.id }}">#{{ o.id }} – {{ o.vehicle.plate }} ({{ "%.2f"|format(o.total_cost) }} ₺)</option>
+    {% endfor %}
+  </select>
+
+  <label>Tutar (₺) *</label>
+  <input type="number" name="amount" step="0.01" min="0" required />
+
+  <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+</form>
+{% endblock %}
